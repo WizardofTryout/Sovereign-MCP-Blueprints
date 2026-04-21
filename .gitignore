@@ -1,0 +1,44 @@
+# Sovereign MCP Blueprints — .gitignore
+
+# Environment files (never commit credentials)
+.env
+*.env.local
+*.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Docker volumes (local state)
+postgres_data/
+audit_logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Agent / AI tooling (workspace-specific, not for public consumption)
+.serena/
+.agent
+.agents/
+.ag-role
+.gemini/
+
+# macOS
+.DS_Store
+._*
+
+# Logs
+*.log
+*.jsonl

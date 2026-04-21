@@ -1,0 +1,118 @@
+# =============================================================================
+# Sovereign MCP Blueprints — auditable-sql-mcp
+# Docker Compose Stack
+#
+# Services:
+#   postgres-demo  : Hardened PostgreSQL with read-only demo data
+#   mcp-server     : Sovereign MCP Server with GDPR anonymisation + audit logging
+#
+# Usage:
+#   cp .env.example .env && docker compose up -d
+# =============================================================================
+
+version: "3.9"
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — Demo Enterprise Database
+  # ---------------------------------------------------------------------------
+  postgres-demo:
+    image: postgres:16-alpine
+    container_name: sovereign_postgres_demo
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-enterprise_db}
+      POSTGRES_USER: ${POSTGRES_USER:-readonly_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_in_env}
+    volumes:
+      # Seed script: creates demo tables and a read-only role
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+      # Persistent data volume
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-readonly_user} -d ${POSTGRES_DB:-enterprise_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    # Security hardening: no ports exposed to host — only reachable from internal_net
+    expose:
+      - "5432"
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # postgres needs to write its data dir
+
+  # ---------------------------------------------------------------------------
+  # Sovereign MCP Server
+  # ---------------------------------------------------------------------------
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sovereign_mcp_server
+    restart: unless-stopped
+    depends_on:
+      postgres-demo:
+        condition: service_healthy
+    environment:
+      # Database connection (resolved within internal_net)
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-readonly_user}:${POSTGRES_PASSWORD:-changeme_in_env}@postgres-demo:5432/${POSTGRES_DB:-enterprise_db}"
+
+      # Audit log destination (stdout for container log aggregation, or file)
+      AUDIT_LOG_MODE: ${AUDIT_LOG_MODE:-stdout}
+      AUDIT_LOG_FILE: ${AUDIT_LOG_FILE:-/var/log/mcp/audit.jsonl}
+
+      # MCP Server identity (appears in audit records)
+      MCP_SERVER_NAME: ${MCP_SERVER_NAME:-sovereign-sql-mcp}
+      MCP_SERVER_VERSION: "1.0.0"
+
+      # Maximum rows Claude can receive per query (data minimisation, GDPR Art. 5(1)(c))
+      QUERY_MAX_ROWS: ${QUERY_MAX_ROWS:-50}
+
+      # Python log level
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      # Mount audit log directory for SIEM collection if file-based logging is used
+      - audit_logs:/var/log/mcp
+    networks:
+      - internal_net
+    ports:
+      # Expose MCP SSE endpoint — bind to localhost only.
+      # In production, replace with your internal load balancer / firewall rule.
+      - "127.0.0.1:${MCP_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+
+# =============================================================================
+# Networks — isolated bridge network; no internet access from internal_net
+# =============================================================================
+networks:
+  internal_net:
+    driver: bridge
+    internal: true   # ← Prevents containers from reaching the internet
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  audit_logs:
+    driver: local

@@ -1,0 +1,46 @@
+# =============================================================================
+# Sovereign MCP Blueprints — auditable-sql-mcp
+# Python Dependencies
+#
+# All packages are pinned to exact versions for supply-chain security
+# and reproducible builds in air-gapped environments.
+#
+# To generate a fresh lock file:
+#   pip-compile requirements.in --generate-hashes
+# =============================================================================
+
+# --- MCP Framework -----------------------------------------------------------
+# Official Anthropic Model Context Protocol Python SDK
+mcp[cli]==1.9.0
+
+# --- Database ----------------------------------------------------------------
+# PostgreSQL async driver (compiled C extension, no libpq host dependency)
+asyncpg==0.30.0
+
+# Psycopg2 binary (synchronous fallback, used by health check utilities)
+psycopg2-binary==2.9.10
+
+# --- Data Validation ---------------------------------------------------------
+# Pydantic v2 — strict type validation for all tool parameters
+pydantic==2.11.3
+pydantic-settings==2.9.1
+
+# --- Async HTTP (for health check endpoint) ----------------------------------
+# Lightweight ASGI server for the /health endpoint
+uvicorn[standard]==0.34.2
+
+# Starlette for the minimal health-check HTTP app (no full framework overhead)
+starlette==0.46.2
+
+# --- Observability -----------------------------------------------------------
+# Structured logging: JSON output compatible with Splunk, Elastic, Loki
+structlog==25.3.0
+
+# --- Security ----------------------------------------------------------------
+# Cryptographic hashing for parameter integrity in audit records
+# (stdlib hashlib used for SHA-256; no external dep needed)
+
+# --- Type Stubs (for IDE support in contributors' environments) --------------
+# These are dev-only but included here for Docker build consistency
+# Remove if optimising for minimal image size
+types-psycopg2==2.9.21.20241019
