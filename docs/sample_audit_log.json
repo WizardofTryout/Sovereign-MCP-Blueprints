@@ -1,0 +1,78 @@
+{
+  "audit_event_id": "aud_7a9f2b8c_8310_4e1a_b57c_11928dfa9381",
+  "timestamp_utc": "2025-10-15T09:42:11.304Z",
+  "event_type": "mcp_tool_invocation_completed",
+  "actor": {
+    "identity": "spiffe://enterprise.local/ns/ai/sa/claude-proxy",
+    "client_ip": "10.14.2.88",
+    "mtls_verified": true
+  },
+  "compliance_context": {
+    "gdpr_article_25_active": true,
+    "pii_redaction_level": "high",
+    "policy_evaluations": [
+      {
+        "policy": "pii_egress_deny.rego",
+        "result": "PASS"
+      },
+      {
+        "policy": "read_only_enforcement.rego",
+        "result": "PASS"
+      }
+    ]
+  },
+  "tool_execution": {
+    "tool_name": "get_customer_financial_summary",
+    "parameters_received": {
+      "region": "DE",
+      "limit": 3
+    },
+    "database_interaction": {
+      "vault_lease_id": "v.lease.d92837f4_a1b2",
+      "query_type": "READ_ONLY",
+      "rows_retrieved": 3
+    },
+    "pii_redaction_engine": {
+      "engine": "Microsoft Presidio v2.2",
+      "entities_detected": 9,
+      "redaction_applied": true,
+      "redaction_stats": {
+        "PERSON": 3,
+        "EMAIL_ADDRESS": 3,
+        "IBAN_CODE": 3
+      }
+    },
+    "final_response_payload": [
+      {
+        "customer_id": "cust_8f1a",
+        "full_name": "<REDACTED_PERSON>",
+        "email": "<REDACTED_EMAIL_ADDRESS>",
+        "iban": "<REDACTED_IBAN_CODE>",
+        "total_revenue_eur": 45000.00,
+        "risk_category": "LOW"
+      },
+      {
+        "customer_id": "cust_9b2c",
+        "full_name": "<REDACTED_PERSON>",
+        "email": "<REDACTED_EMAIL_ADDRESS>",
+        "iban": "<REDACTED_IBAN_CODE>",
+        "total_revenue_eur": 12500.50,
+        "risk_category": "MEDIUM"
+      },
+      {
+        "customer_id": "cust_3e4d",
+        "full_name": "<REDACTED_PERSON>",
+        "email": "<REDACTED_EMAIL_ADDRESS>",
+        "iban": "<REDACTED_IBAN_CODE>",
+        "total_revenue_eur": 8900.00,
+        "risk_category": "HIGH"
+      }
+    ],
+    "telemetry": {
+      "trace_id": "5b8ae7f6312cd98a",
+      "total_latency_ms": 142,
+      "db_latency_ms": 18,
+      "redaction_latency_ms": 112
+    }
+  }
+}
