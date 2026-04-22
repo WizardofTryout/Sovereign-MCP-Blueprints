@@ -137,6 +137,34 @@ open http://localhost:16686
 
 ---
 
+## Claude Desktop Integration
+
+To connect your local Claude Desktop app to the running Sovereign MCP container, add the following to your `claude_desktop_config.json`:
+
+**Mac/Linux:** `~/.config/Claude/claude_desktop_config.json`  
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "sovereign-sql-mcp": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "sovereign_mcp_server",
+        "python",
+        "server.py"
+      ]
+    }
+  }
+}
+```
+
+*Note: Ensure the docker-compose stack is running (`docker compose up -d`) before launching Claude Desktop. The `exec -i` command securely routes the stdio JSON-RPC protocol directly into the isolated container.*
+
+---
+
 ## Repository Structure
 
 ```
