@@ -164,6 +164,7 @@ To connect your local Claude Desktop app to the running Sovereign MCP container,
 *Note: Ensure the docker-compose stack is running (`docker compose up -d`) before launching Claude Desktop. The `exec -i` command securely routes the stdio JSON-RPC protocol directly into the isolated container.*
 
 ---
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/WizardofTryout/Sovereign-MCP-Blueprints)
 
 ## Repository Structure
 
